@@ -34,11 +34,14 @@
       <div class="form-row">
 
         <!-- type -->
-        <div class="form-froup col-md-2">
-          <label for="name">Tipo</label>
+        <div class="form-group col-md-2">
+          <label class="label" for="type">Tipo</label>
           <select name="type" id="type" formControlName="type" class="form-control">
-            <option value="expense">Despesa</option>
-            <option value="revenue">Receita</option>
+            <option 
+              *ngFor="let option of typeOptions"
+              [value]="option.value">
+                {{option.text}}
+              </option>
           </select>
           <div class="text-danger" *ngIf="entryForm.get('type').invalid && entryForm.get('type').touched">
             <div *ngIf="entryForm.get('type').errors.required">Dado obrigatório</div>
@@ -46,8 +49,8 @@
         </div>
 
         <!-- name -->
-        <div class="form-froup col-md-5">
-          <label for="name">Lançamento</label>
+        <div class="form-group col-md-5">
+          <label class="label" for="name">Lançamento</label>
           <input 
           type="text" 
           class="form-control" 
@@ -60,8 +63,8 @@
         </div>
 
         <!-- amount -->
-        <div class="form-froup col-md-3">
-          <label for="name">Valor</label>
+        <div class="form-group col-md-2">
+          <label class="label" for="amount">Valor</label>
           <div class="input-group">
             <div class="input-group-prepend">
               <div class="input-group-text">
@@ -80,9 +83,9 @@
           </div>
         </div>
 
-         <!-- date -->
-         <div class="form-froup col-md-2">
-          <label for="name">Data</label>
+        <!-- date -->
+        <div class="form-group col-md-2">
+          <label class="label" for="date">Data</label>
           <p-calendar
             id="date"
             formControlName="date"
@@ -96,16 +99,51 @@
             <div *ngIf="entryForm.get('date').errors.required">Dado obrigatório</div>
           </div>
         </div>
+      </div>
+
+      <div class="form-row mt-3">
+        <!-- paid -->
+        <div class="form-group col-md-2.5">
+          <label class="label" for="paid">Pago</label>
+          <div class="btn-group">
+            <label 
+              (click)="entryForm.get('paid').setValue(true)"
+              class="btn btn-outline-info"
+              [class.active]="entryForm.get('paid').value === true">Pago</label>
+            <label 
+              (click)="entryForm.get('paid').setValue(false)"
+              class="btn btn-outline-info"
+              [class.active]="entryForm.get('paid').value === false">Pendente</label>
+          </div>
+          <div class="text-danger" *ngIf="entryForm.get('paid').invalid && entryForm.get('paid').touched">
+            <div *ngIf="entryForm.get('paid').errors.required">Dado obrigatório</div>
+          </div>
+        </div>
 
         <!-- description -->
-        <div class="form-group col-md-8 mt-3">
-          <label for="description">Descrição</label>
+        <div class="form-group col-md-6">
+          <label class="label" for="description">Descrição</label>
           <input 
           type="text" 
           class="form-control" 
           id="description"
           formControlName="description">
         </div>
+
+         <!-- categoryId -->
+         <div class="form-group col-md-3">
+          <label class="label" for="categoryId">Categoria</label>
+          <select name="categoryId" id="categoryId" formControlName="categoryId" class="form-control">
+            <option 
+              *ngFor="let category of categories"  
+              [value]="category.id">{{category.name}}</option>
+          </select>
+          <div class="text-danger" *ngIf="entryForm.get('categoryId').invalid && entryForm.get('categoryId').touched">
+            <div *ngIf="entryForm.get('categoryId').errors.required">Dado obrigatório</div>
+          </div>
+        </div>
+
+        
       </div>
     </div>
   </div>
@@ -122,3 +160,5 @@
   type="submit" 
   class="btn btn-primary btn-lg float-right mt-4">Salvar</button>
 </form>
+
+<pre>{{entryForm.value | json}}</pre>

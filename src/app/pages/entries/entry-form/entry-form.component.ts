@@ -7,6 +7,8 @@ import { EntryService } from '../shared/entry.service';
 
 import toastr from 'toastr';
 import { switchMap } from 'rxjs/operators';
+import { Category } from '../../categories/shared/category.model';
+import { CategoryService } from '../../categories/shared/category.service';
 
 @Component({
   selector: 'app-entry-form',
@@ -22,6 +24,7 @@ export class EntryFormComponent implements OnInit, AfterContentChecked {
   serverErrorMessages: string[] = null;
   submittingForm: boolean = false;
   entry: Entry = new Entry;
+  categories: Category[];
 
   imaskConfig = {
     mask: Number,
@@ -48,6 +51,7 @@ export class EntryFormComponent implements OnInit, AfterContentChecked {
 
   constructor(
     private entryService: EntryService,
+    private categoryService: CategoryService,
     private route: ActivatedRoute,
     private router: Router,
     private formBuilder: FormBuilder
@@ -57,6 +61,7 @@ export class EntryFormComponent implements OnInit, AfterContentChecked {
     this.setCurrentAction();
     this.buildEntryForm();
     this.loadEntry();
+    this.loadCategories();
   }
 
   ngAfterContentChecked() {
@@ -73,63 +78,10 @@ export class EntryFormComponent implements OnInit, AfterContentChecked {
     }
   }
 
-  private setCurrentAction() {
-    if (this.route.snapshot.url[0].path === "new") {
-      this.currentAction = 'new';
-    } else {
-      this.currentAction = 'edit'
-    }
-  }
-
-  private buildEntryForm() {
-    this.entryForm = this.formBuilder.group({
-      id: [null],
-      name: [null, [Validators.required, Validators.minLength(2)]],
-      description: [null],
-      type: [null, [Validators.required]],
-      amount: [null, [Validators.required]],
-      date: [null, [Validators.required]],
-      paid: [null, [Validators.required]],
-      categoryId: [null, [Validators.required]]
-    })
-  }
-
-  private loadEntry() {
-    if (this.currentAction === 'edit') {
-      this.route.paramMap.pipe(
-        switchMap(params => this.entryService.getById(+params.get("id")))
-      )
-      .subscribe(entry => {
-          this.entry = entry;
-          this.entryForm.patchValue(entry)
-      },
-      error => alert('Erro no servidor'))
-    }
-  }
-
-  private setPageTitle() {
-    if (this.currentAction === 'new') {
-      this.pageTitle = 'Cadastro de novo lançamento';
-    } else {
-      const entryName = this.entry.name || "";
-      this.pageTitle = `Editando lançamento: ${entryName}`;
-    }
-  }
-
   createEntry() {
     const entry: Entry = Object.assign(new Entry(), this.entryForm.value);
 
     this.entryService.create(entry)
-    .subscribe(
-      entry => this.actionsForSuccess(entry),
-      error => this.actionsForError(error)
-    )
-  }
-
-  private updateEntry() {
-    const entry: Entry = Object.assign(new Entry(), this.entryForm.value);
-
-    this.entryService.update(entry)
     .subscribe(
       entry => this.actionsForSuccess(entry),
       error => this.actionsForError(error)
@@ -159,5 +111,77 @@ export class EntryFormComponent implements OnInit, AfterContentChecked {
     } else {
       this.serverErrorMessages = ["Falha na comunicação com o servidor. Tente novamente mais tarde."]
     }
+  }
+
+  get typeOptions(): Array<any> {
+    return Object.entries(Entry.types).map(
+      ([value, text]) => {
+        return {
+          text,
+          value
+        }
+      }
+    )
+  }
+
+  private setCurrentAction() {
+    if (this.route.snapshot.url[0].path === "new") {
+      this.currentAction = 'new';
+    } else {
+      this.currentAction = 'edit'
+    }
+  }
+
+  private buildEntryForm() {
+    this.entryForm = this.formBuilder.group({
+      id: [null],
+      name: [null, [Validators.required, Validators.minLength(2)]],
+      description: [null],
+      type: ["expense", [Validators.required]],
+      amount: [null, [Validators.required]],
+      date: [null, [Validators.required]],
+      paid: [true, [Validators.required]],
+      categoryId: [null, [Validators.required]]
+    })
+  }
+
+  private loadEntry() {
+    if (this.currentAction === 'edit') {
+      this.route.paramMap.pipe(
+        switchMap(params => this.entryService.getById(+params.get("id")))
+      )
+      .subscribe(entry => {
+          this.entry = entry;
+          this.entryForm.patchValue(entry)
+      },
+      error => alert('Erro no servidor'))
+    }
+  }
+
+  private loadCategories() {
+    this.categoryService.getAll().subscribe(response => {
+      this.categories = response;
+    })
+  }
+
+  private setPageTitle() {
+    if (this.currentAction === 'new') {
+      this.pageTitle = 'Cadastro de novo lançamento';
+    } else {
+      const entryName = this.entry.name || "";
+      this.pageTitle = `Editando lançamento: ${entryName}`;
+    }
+  }
+
+  
+
+  private updateEntry() {
+    const entry: Entry = Object.assign(new Entry(), this.entryForm.value);
+
+    this.entryService.update(entry)
+    .subscribe(
+      entry => this.actionsForSuccess(entry),
+      error => this.actionsForError(error)
+    )
   }
 }
